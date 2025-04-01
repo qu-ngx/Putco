@@ -162,20 +162,30 @@ export const brandOptionsMap = {
 };
 
 export const filterOptions = {
-  category: [
-    { id: "men", label: "Men" },
-    { id: "women", label: "Women" },
-    { id: "kids", label: "Kids" },
-    { id: "accessories", label: "Accessories" },
-    { id: "footwear", label: "Footwear" },
+  status: [
+    { id: "open", label: "Open Now" },
+    { id: "closed", label: "Closed" },
   ],
   brand: [
-    { id: "nike", label: "Nike" },
-    { id: "adidas", label: "Adidas" },
-    { id: "puma", label: "Puma" },
-    { id: "levi", label: "Levi's" },
-    { id: "zara", label: "Zara" },
-    { id: "h&m", label: "H&M" },
+    { id: "starbucks", label: "Starbucks" },
+    { id: "mcdonalds", label: "McDonald's" },
+    { id: "subway", label: "Subway" },
+    { id: "dunkin", label: "Dunkin'" },
+    { id: "chipotle", label: "Chipotle" },
+    { id: "panera", label: "Panera Bread" },
+    { id: "wendys", label: "Wendy's" },
+    { id: "burgerking", label: "Burger King" },
+  ],
+  rating: [
+    { id: "4.5", label: "4.5+ Stars" },
+    { id: "4.0", label: "4.0+ Stars" },
+    { id: "3.5", label: "3.5+ Stars" },
+  ],
+  price: [
+    { id: "1", label: "$" },
+    { id: "2", label: "$$" },
+    { id: "3", label: "$$$" },
+    { id: "4", label: "$$$$" },
   ],
 };
 
@@ -221,4 +231,32 @@ export const addressFormControls = [
     componentType: "textarea",
     placeholder: "Enter any additional notes",
   },
+];
+
+export const DEFAULT_COORDINATES = {
+  latitude: 39.64449,
+  longitude: -86.86473
+};
+
+export const placeTypes = [
+  { id: "restaurant", label: "Restaurants" },
+  { id: "cafe", label: "Cafes" },
+  { id: "bar", label: "Bars" },
+  { id: "supermarket", label: "Supermarkets" },
+  { id: "shopping_mall", label: "Shopping Malls" },
+  { id: "convenience_store", label: "Convenience Stores" },
+  { id: "bakery", label: "Bakeries" },
+  { id: "clothing_store", label: "Clothing Stores" },
+  { id: "department_store", label: "Department Stores" },
+  { id: "electronics_store", label: "Electronics Stores" },
+  { id: "grocery_or_supermarket", label: "Grocery Stores" },
+  { id: "pharmacy", label: "Pharmacies" },
+  { id: "book_store", label: "Book Stores" },
+  { id: "home_goods_store", label: "Home Goods" },
+  { id: "furniture_store", label: "Furniture Stores" },
+  { id: "hardware_store", label: "Hardware Stores" },
+  { id: "pet_store", label: "Pet Stores" },
+  { id: "shoe_store", label: "Shoe Stores" },
+  { id: "jewelry_store", label: "Jewelry Stores" },
+  { id: "liquor_store", label: "Liquor Stores" }
 ];

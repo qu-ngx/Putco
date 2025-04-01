@@ -1,254 +1,171 @@
 /* eslint-disable react/prop-types */
-import { StarIcon } from "lucide-react";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { StarIcon, Clock, MapPin, Phone, Globe, User } from "lucide-react";
 import { Button } from "../ui/button";
 import { Dialog, DialogContent } from "../ui/dialog";
 import { Separator } from "../ui/separator";
-import { Input } from "../ui/input";
-import { useDispatch, useSelector } from "react-redux";
-import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
-import { useToast } from "../ui/use-toast";
-import { setProductDetails } from "@/store/shop/products-slice";
 import { Label } from "../ui/label";
 import StarRatingComponent from "../common/star-rating";
-import { useEffect, useState, useCallback } from "react";
-import { addReview, getReviews, resetState } from "@/store/shop/review-slice";
 
 function ProductDetailsDialog({ open, setOpen, productDetails }) {
-  const [reviewMsg, setReviewMsg] = useState("");
-  const [rating, setRating] = useState(0);
-  const dispatch = useDispatch();
-  const { user } = useSelector((state) => state.auth);
-  const { cartItems } = useSelector((state) => state.shopCart);
-  const { reviews, error } = useSelector((state) => state.shopReview);
+  if (!productDetails) return null;
 
-  const { toast } = useToast();
+  const {
+    name,
+    rating,
+    user_ratings_total,
+    vicinity,
+    opening_hours,
+    photos,
+    types,
+    website,
+    phone,
+    reviews,
+    editorial_summary
+  } = productDetails;
 
-  const handleRatingChange = useCallback((getRating) => {
-    setRating(getRating);
-  }, []);
-
-  const handleAddToCart = useCallback(
-    (getCurrentProductId, getTotalStock) => {
-      let getCartItems = cartItems.items || [];
-
-      if (getCartItems.length) {
-        const indexOfCurrentItem = getCartItems.findIndex(
-          (item) => item.productId === getCurrentProductId,
-        );
-        if (indexOfCurrentItem > -1) {
-          const getQuantity = getCartItems[indexOfCurrentItem].quantity;
-          if (getQuantity + 1 > getTotalStock) {
-            toast({
-              title: `Only ${getQuantity} quantity can be added for this item`,
-              variant: "destructive",
-            });
-            return;
-          }
-        }
-      }
-      dispatch(
-        addToCart({
-          userId: user?.id,
-          productId: getCurrentProductId,
-          quantity: 1,
-        }),
-      ).then((data) => {
-        if (data?.payload?.success) {
-          dispatch(fetchCartItems(user?.id));
-          toast({
-            title: "Product is added to cart",
-          });
-        }
-      });
-    },
-    [cartItems, dispatch, user?.id, toast],
-  );
-
-  const handleDialogClose = useCallback(() => {
-    setOpen(false);
-    dispatch(setProductDetails());
-    setRating(0);
-    setReviewMsg("");
-    dispatch(resetState());
-  }, [dispatch, setOpen]);
-
-  const handleAddReview = useCallback(() => {
-    if (!user?.id) {
-      toast({
-        title: "Please login to add a review",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!rating) {
-      toast({
-        title: "Please select a rating",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!reviewMsg.trim()) {
-      toast({
-        title: "Please enter a review message",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    dispatch(
-      addReview({
-        userId: user?.id,
-        productId: productDetails?._id,
-        rating,
-        message: reviewMsg.trim(),
-      }),
-    ).then((data) => {
-      if (data?.payload?.success) {
-        dispatch(getReviews(productDetails?._id));
-        setRating(0);
-        setReviewMsg("");
-        toast({
-          title: "Review added successfully",
-        });
-      }
-    });
-  }, [dispatch, user?.id, productDetails?._id, rating, reviewMsg, toast]);
-
-  useEffect(() => {
-    if (productDetails !== null) {
-      dispatch(getReviews(productDetails?._id));
-    }
-
-    return () => {
-      dispatch(resetState());
-    };
-  }, [dispatch, productDetails]);
-
-  const averageReview =
-    reviews && reviews.length > 0
-      ? reviews.reduce((sum, reviewItem) => sum + reviewItem.reviewValue, 0) /
-        reviews.length
-      : 0;
+  const fallbackImage = "https://via.placeholder.com/300x200?text=No+Image+Available";
+  const photoReference = photos?.[0]?.photo_reference;
+  const imageUrl = photoReference
+    ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoReference}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
+    : fallbackImage;
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="grid grid-cols-2 gap-8 sm:p-12 max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw]">
-        <div className="col-span-2 border-b pb-4">
-          <h1 className="text-2xl font-bold">Product Details</h1>
-        </div>
-        <div className="relative overflow-hidden rounded-lg">
-          <img
-            src={productDetails?.image}
-            alt={productDetails?.title}
-            width={600}
-            height={600}
-            className="aspect-square w-full object-cover"
-          />
-        </div>
-        <div className="">
-          <div>
-            <h1 className="text-3xl font-extrabold">{productDetails?.title}</h1>
-            <p className="text-muted-foreground text-2xl mb-5 mt-4">
-              {productDetails?.description}
-            </p>
-          </div>
-          <div className="flex items-center justify-between">
-            <p
-              className={`text-3xl font-bold text-primary ${
-                productDetails?.salePrice > 0 ? "line-through" : ""
-              }`}
-            >
-              ${productDetails?.price}
-            </p>
-            {productDetails?.salePrice > 0 ? (
-              <p className="text-2xl font-bold text-muted-foreground">
-                ${productDetails?.salePrice}
-              </p>
-            ) : null}
-          </div>
-          <div className="flex items-center gap-2 mt-2">
-            <div className="flex items-center gap-0.5">
-              <StarRatingComponent rating={averageReview} />
-            </div>
-            <span className="text-muted-foreground">
-              ({averageReview.toFixed(2)})
-            </span>
-          </div>
-          <div className="mt-5 mb-5">
-            {productDetails?.totalStock === 0 ? (
-              <Button className="w-full opacity-60 cursor-not-allowed">
-                Out of Stock
-              </Button>
-            ) : (
-              <Button
-                className="w-full"
-                onClick={() =>
-                  handleAddToCart(
-                    productDetails?._id,
-                    productDetails?.totalStock,
-                  )
-                }
-              >
-                Add to Cart
-              </Button>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="relative">
+            <img
+              src={imageUrl}
+              alt={name}
+              className="w-full h-[300px] object-cover rounded-lg"
+              onError={(e) => {
+                e.target.src = fallbackImage;
+              }}
+            />
+            {rating && (
+              <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full flex items-center gap-1">
+                <StarIcon className="w-4 h-4 fill-yellow-500" />
+                <span className="font-semibold">{rating}</span>
+              </div>
             )}
           </div>
-          <Separator />
-          <div className="max-h-[300px] overflow-auto">
-            <h2 className="text-xl font-bold mb-4">Reviews</h2>
-            <div className="grid gap-6">
-              {reviews && reviews.length > 0 ? (
-                reviews.map((reviewItem) => (
-                  <div key={reviewItem._id} className="flex gap-4">
-                    <Avatar className="w-10 h-10 border">
-                      <AvatarFallback>
-                        {reviewItem?.userName[0].toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="grid gap-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold">{reviewItem?.userName}</h3>
-                      </div>
-                      <div className="flex items-center gap-0.5">
-                        <StarRatingComponent rating={reviewItem?.reviewValue} />
-                      </div>
-                      <p className="text-muted-foreground">
-                        {reviewItem.reviewMessage}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground">No reviews yet</p>
-              )}
-            </div>
-            <div className="mt-10 flex-col flex gap-2">
-              <Label>Write a review</Label>
-              <div className="flex gap-1">
-                <StarRatingComponent
-                  rating={rating}
-                  handleRatingChange={handleRatingChange}
-                />
+          <div className="space-y-4">
+            <div>
+              <h2 className="text-2xl font-bold mb-2">{name}</h2>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <MapPin className="w-4 h-4" />
+                <span>{vicinity}</span>
               </div>
-              <Input
-                name="reviewMsg"
-                value={reviewMsg}
-                onChange={(event) => setReviewMsg(event.target.value)}
-                placeholder="Write a review..."
-              />
-              <Button
-                onClick={handleAddReview}
-                disabled={reviewMsg.trim() === ""}
-              >
-                Submit
-              </Button>
-              {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
+            </div>
+
+            <Separator />
+
+            {rating && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <StarRatingComponent rating={rating} />
+                  <span className="text-sm text-muted-foreground">
+                    ({user_ratings_total} reviews)
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {opening_hours && (
+              <div className="space-y-2">
+                <Label>Opening Hours</Label>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  <span>{opening_hours.open_now ? "Open Now" : "Closed"}</span>
+                </div>
+              </div>
+            )}
+
+            {types && types.length > 0 && (
+              <div className="space-y-2">
+                <Label>Categories</Label>
+                <div className="flex flex-wrap gap-2">
+                  {types.map((type) => (
+                    <span
+                      key={type}
+                      className="px-2 py-1 bg-secondary rounded-full text-sm"
+                    >
+                      {type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <Separator />
+
+            <div className="space-y-2">
+              {phone && (
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4" />
+                  <span>{phone}</span>
+                </div>
+              )}
+              {website && (
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  <a
+                    href={website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline"
+                  >
+                    Visit Website
+                  </a>
+                </div>
+              )}
             </div>
           </div>
         </div>
+
+        {editorial_summary && (
+          <>
+            <Separator className="my-6" />
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">About</h3>
+              <p className="text-muted-foreground">{editorial_summary.overview}</p>
+            </div>
+          </>
+        )}
+
+        {reviews && reviews.length > 0 && (
+          <>
+            <Separator className="my-6" />
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Reviews</h3>
+              <div className="space-y-4">
+                {reviews.map((review, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4" />
+                      <span className="font-medium">{review.author_name}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(review.time * 1000).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <StarRatingComponent rating={review.rating} />
+                      <span className="text-sm text-muted-foreground">
+                        {review.relative_time_description}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground">{review.text}</p>
+                    {review.translated && (
+                      <p className="text-sm text-muted-foreground italic">
+                        Translated: {review.translated}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

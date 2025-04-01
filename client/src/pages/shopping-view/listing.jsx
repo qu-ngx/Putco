@@ -10,50 +10,35 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/components/ui/use-toast";
-import { sortOptions } from "@/config";
-import { addToCart, fetchCartItems } from "@/store/shop/cart-slice";
+import { sortOptions, placeTypes, DEFAULT_COORDINATES } from "@/config";
 import {
-  fetchAllFilteredProducts,
-  fetchProductDetails,
-} from "@/store/shop/products-slice";
-import { ArrowUpDownIcon } from "lucide-react";
+  fetchNearbyLocations,
+  fetchLocationDetails,
+} from "@/store/shop/locations-slice";
+import { ArrowUpDownIcon, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 
-function createSearchParamsHelper(filterParams) {
-  const queryParams = [];
-
-  for (const [key, value] of Object.entries(filterParams)) {
-    if (Array.isArray(value) && value.length > 0) {
-      const paramValue = value.join(",");
-
-      queryParams.push(`${key}=${encodeURIComponent(paramValue)}`);
-    }
-  }
-
-  console.log(queryParams, "queryParams");
-
-  return queryParams.join("&");
-}
-
 function ShoppingListing() {
   const dispatch = useDispatch();
-  const { productList, productDetails } = useSelector(
-    (state) => state.shopProducts
+  const { locationList, locationDetails } = useSelector(
+    (state) => state.locations,
   );
-  const { cartItems } = useSelector((state) => state.shopCart);
-  const { user } = useSelector((state) => state.auth);
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const { toast } = useToast();
 
-  const categorySearchParam = searchParams.get("category");
+  const categorySearchParam = searchParams.get("category") || "restaurant";
 
   function handleSort(value) {
     setSort(value);
+  }
+
+  function handleCategoryChange(value) {
+    setSearchParams({ category: value });
   }
 
   function handleFilter(getSectionId, getCurrentOption) {
@@ -79,81 +64,132 @@ function ShoppingListing() {
   }
 
   function handleGetProductDetails(getCurrentProductId) {
-    console.log(getCurrentProductId);
-    dispatch(fetchProductDetails(getCurrentProductId));
+    dispatch(fetchLocationDetails(getCurrentProductId));
   }
 
-  function handleAddtoCart(getCurrentProductId, getTotalStock) {
-    console.log(cartItems);
-    let getCartItems = cartItems.items || [];
+  useEffect(() => {
+    if (locationDetails !== null) setOpenDetailsDialog(true);
+  }, [locationDetails]);
 
-    if (getCartItems.length) {
-      const indexOfCurrentItem = getCartItems.findIndex(
-        (item) => item.productId === getCurrentProductId
-      );
-      if (indexOfCurrentItem > -1) {
-        const getQuantity = getCartItems[indexOfCurrentItem].quantity;
-        if (getQuantity + 1 > getTotalStock) {
-          toast({
-            title: `Only ${getQuantity} quantity can be added for this item`,
-            variant: "destructive",
-          });
-
-          return;
-        }
-      }
-    }
-
+  useEffect(() => {
+    // Use default coordinates
     dispatch(
-      addToCart({
-        userId: user?.id,
-        productId: getCurrentProductId,
-        quantity: 1,
-      })
-    ).then((data) => {
-      if (data?.payload?.success) {
-        dispatch(fetchCartItems(user?.id));
-        toast({
-          title: "Product is added to cart",
-        });
+      fetchNearbyLocations({
+        latitude: DEFAULT_COORDINATES.latitude,
+        longitude: DEFAULT_COORDINATES.longitude,
+        radius: 5000,
+        type: categorySearchParam,
+      }),
+    );
+  }, [dispatch, categorySearchParam]);
+
+  const selectedCategory =
+    placeTypes.find((type) => type.id === categorySearchParam) || placeTypes[0];
+
+  // Sort locations based on selected sort option
+  const sortedLocations = [...(locationList || [])].sort((a, b) => {
+    // First, sort by open/closed status if status filter is active
+    if (filters.status && filters.status.length > 0) {
+      const aIsOpen = a.opening_hours?.open_now;
+      const bIsOpen = b.opening_hours?.open_now;
+      if (aIsOpen !== bIsOpen) {
+        return bIsOpen ? 1 : -1;
       }
-    });
-  }
-
-  useEffect(() => {
-    setSort("price-lowtohigh");
-    setFilters(JSON.parse(sessionStorage.getItem("filters")) || {});
-  }, [categorySearchParam]);
-
-  useEffect(() => {
-    if (filters && Object.keys(filters).length > 0) {
-      const createQueryString = createSearchParamsHelper(filters);
-      setSearchParams(new URLSearchParams(createQueryString));
     }
-  }, [filters]);
 
-  useEffect(() => {
-    if (filters !== null && sort !== null)
-      dispatch(
-        fetchAllFilteredProducts({ filterParams: filters, sortParams: sort })
-      );
-  }, [dispatch, sort, filters]);
+    // Then apply the selected sort option
+    if (!sort) return 0;
 
-  useEffect(() => {
-    if (productDetails !== null) setOpenDetailsDialog(true);
-  }, [productDetails]);
+    switch (sort) {
+      case "rating":
+        return (b.rating || 0) - (a.rating || 0);
+      case "distance":
+        return (a.distance || 0) - (b.distance || 0);
+      case "name":
+        return a.name.localeCompare(b.name);
+      default:
+        return 0;
+    }
+  });
 
-  console.log(productList, "productListproductListproductList");
+  // Filter locations based on selected filters
+  const filteredLocations = sortedLocations.filter((location) => {
+    if (!filters || Object.keys(filters).length === 0) return true;
+
+    // Status filter
+    if (filters.status && filters.status.length > 0) {
+      const isOpen = location.opening_hours?.open_now;
+      if (!filters.status.includes(isOpen ? "open" : "closed")) {
+        return false;
+      }
+    }
+
+    // Brand filter
+    if (filters.brand && filters.brand.length > 0) {
+      const locationName = location.name.toLowerCase();
+      if (!filters.brand.some(brand => locationName.includes(brand.toLowerCase()))) {
+        return false;
+      }
+    }
+
+    // Rating filter
+    if (filters.rating && filters.rating.length > 0) {
+      const minRating = Math.min(...filters.rating.map(r => parseFloat(r)));
+      if (!location.rating || location.rating < minRating) {
+        return false;
+      }
+    }
+
+    // Price filter
+    if (filters.price && filters.price.length > 0) {
+      const priceLevel = location.price_level || 0;
+      if (!filters.price.includes(priceLevel.toString())) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
       <ProductFilter filters={filters} handleFilter={handleFilter} />
       <div className="bg-background w-full rounded-lg shadow-sm">
-        <div className="p-4 border-b flex items-center justify-between">
-          <h2 className="text-lg font-extrabold">All Products</h2>
-          <div className="flex items-center gap-3">
+        <div className="p-4 border-b">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-extrabold">
+                Nearby {selectedCategory.label}
+              </h2>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                >
+                  <Store className="h-4 w-4" />
+                  <span>{selectedCategory.label}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[200px]">
+                <DropdownMenuRadioGroup
+                  value={categorySearchParam}
+                  onValueChange={handleCategoryChange}
+                >
+                  {placeTypes.map((type) => (
+                    <DropdownMenuRadioItem value={type.id} key={type.id}>
+                      {type.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="flex items-center justify-between">
             <span className="text-muted-foreground">
-              {productList?.length} Products
+              {filteredLocations.length} Locations
             </span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -182,21 +218,26 @@ function ShoppingListing() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          {productList && productList.length > 0
-            ? productList.map((productItem) => (
-                <ShoppingProductTile
-                  handleGetProductDetails={handleGetProductDetails}
-                  product={productItem}
-                  handleAddtoCart={handleAddtoCart}
-                />
-              ))
-            : null}
+          {filteredLocations.length > 0 ? (
+            filteredLocations.map((locationItem) => (
+              <ShoppingProductTile
+                key={locationItem.place_id}
+                handleGetProductDetails={handleGetProductDetails}
+                product={locationItem}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              No locations found matching your filters. Try adjusting your filters or
+              search radius.
+            </div>
+          )}
         </div>
       </div>
       <ProductDetailsDialog
         open={openDetailsDialog}
         setOpen={setOpenDetailsDialog}
-        productDetails={productDetails}
+        productDetails={locationDetails}
       />
     </div>
   );
