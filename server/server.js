@@ -14,6 +14,9 @@ const shopSearchRouter = require("./routes/shop/search-routes");
 const shopReviewRouter = require("./routes/shop/review-routes");
 const shopLocationsRouter = require("./routes/shop/locations-routes");
 const shopUserReviewsRouter = require("./routes/shop/user-reviews-routes");
+const userRouter = require("./routes/social-media/user-routes");
+const userPostRouter = require("./routes/social-media/user-post-routes");
+const notificationRouter = require("./routes/social-media/notification-routes");
 
 const commonFeatureRouter = require("./routes/common/feature-routes");
 
@@ -41,7 +44,7 @@ app.use(cors({
 // Middleware
 app.use(cookieParser());
 app.use(express.json());
-
+app.use(express.urlencoded({extended:true}));
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -65,6 +68,9 @@ app.use("/api/shop/search", shopSearchRouter);
 app.use("/api/shop/review", shopReviewRouter);
 app.use("/api/shop/locations", shopLocationsRouter);
 app.use("/api/shop/reviews", shopUserReviewsRouter);
+app.use("/api/social-media/user", userRouter);
+app.use("/api/social-media/post", userPostRouter);
+app.use("/api/social-media/notification", notificationRouter);
 
 app.use("/api/common/feature", commonFeatureRouter);
 
