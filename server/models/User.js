@@ -19,7 +19,46 @@ const UserSchema = new mongoose.Schema({
     type: String,
     default: "user",
   },
-});
+  followers: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
+    },
+  ],
+  following: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: [],
+    },
+  ],
+  profileImg: {
+    type: String,
+    default: "",
+  },
+  coverImg: {
+    type: String,
+    default: "",
+  },
+  bio: {
+    type: String,
+    default: "",
+  },
 
-const User = mongoose.model("User", UserSchema);
-module.exports = User;
+  link: {
+    type: String,
+    default: "",
+  },
+  likedPosts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Post",
+      default: [],
+    },
+  ],
+},
+{ timestamps: true }
+);
+
+module.exports = mongoose.model("User", UserSchema);
