@@ -24,10 +24,10 @@ import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
 //Social Media
 
-/*import HomePage from "../src/pages/social-media-view/home/home-page";
-import NotificationPage from "../src/pages/social-media-view/notification/notification-page";
-import ProfilePage from "../src/pages/social-media-view/profile/profile-page";
-import RightPanel from "../src/components/social-media-view/right-panel";
+import HomePage from "./pages/social-media-view/home/home-page";
+import NotificationPage from "./pages/social-media-view/notification/notification-page";
+import ProfilePage from "./pages/social-media-view/profile/profile-page";
+import RightPanel from "./components/social-media-view/right-panel";
 
 import { Toaster } from "react-hot-toast";
 const SocialMediaLayout = ({ children }) => (
@@ -36,7 +36,7 @@ const SocialMediaLayout = ({ children }) => (
     <RightPanel />
     <Toaster />
   </div>
-); */
+); 
 function App() {
   const { user, isAuthenticated, isLoading } = useSelector(
     (state) => state.auth
@@ -103,12 +103,12 @@ function App() {
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
           </Route>
-           {/* {/* Social Media Routes */} {/*
+           {/* Social Media Routes */}
         <Route path="shop/social-media" element={<SocialMediaLayout />}>
           <Route path="home" element={<HomePage />} />
           <Route path="notifications" element={<NotificationPage />} />
           <Route path="profile/:username" element={<ProfilePage />} />
-        </Route>  */}
+        </Route>  
         <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
