@@ -40,19 +40,19 @@ const registerUser = async (req, res) => {
     });
     generateTokenAndSetCookie(newUser._id, res);
     await newUser.save();
-    //res.status(200).json({
-     // success: true,
-     // message: "Registration successful",
-    //});
-    res.status(201).json({
-      _id: newUser._id,
-      userName: newUser.userName,
-      email: newUser.email,
-      followers: newUser.followers,
-      following: newUser.following,
-      profileImg: newUser.profileImg,
-      coverImg: newUser.coverImg,
+    res.status(200).json({
+    success: true,
+    message: "Registration successful",
     });
+    //res.status(201).json({
+     // _id: newUser._id,
+     // userName: newUser.userName,
+     // email: newUser.email,
+     // followers: newUser.followers,
+     // following: newUser.following,
+     // profileImg: newUser.profileImg,
+     // coverImg: newUser.coverImg,
+    //});
   } catch (e) {
     console.log(e);
     // Handle Mongoose validation errors
@@ -103,7 +103,6 @@ const loginUser = async (req, res) => {
       "CLIENT_SECRET_KEY",
       { expiresIn: "60m" }
     );
-    generateTokenAndSetCookie(checkUser._id, res);
     res.cookie("token", token, { httpOnly: true, secure: false }).json({
       success: true,
       message: "Logged in successfully",
