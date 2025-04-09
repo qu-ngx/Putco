@@ -7,15 +7,15 @@ const Posts = ({ feedType, username, userId }) => {
 	const getPostEndpoint = () => {
 		switch (feedType) {
 			case "forYou":
-				return "/api/social-media/post/all";
+				return "http://localhost:5300/api/social-media/post/all";
 			case "following":
-				return "/api/social-media/post/following";
+				return "http://localhost:5300/api/social-media/post/following";
 			case "posts":
-				return `/api/social-media/post/user/${username}`;
+				return `http://localhost:5300/api/social-media/post/user/${username}`;
 			case "likes":
-				return `/api/social-media/post/likes/${userId}`;
+				return `http://localhost:5300/api/social-media/post/likes/${userId}`;
 			default:
-				return "/api/social-media/post/all";
+				return "http://localhost:5300/api/social-media/post/all";
 		}
 	};
 
@@ -50,16 +50,21 @@ const Posts = ({ feedType, username, userId }) => {
 
 	return (
 		<>
+			{/* Loading skeleton */}
 			{(isLoading || isRefetching) && (
-				<div className='flex flex-col justify-center'>
+				<div className="flex flex-col justify-center">
 					<PostSkeleton />
 					<PostSkeleton />
 					<PostSkeleton />
 				</div>
 			)}
+
+			{/* No posts available */}
 			{!isLoading && !isRefetching && posts?.length === 0 && (
-				<p className='text-center my-4'>No posts in this tab. Switch 👻</p>
+				<p className="text-center my-4">No posts in this tab. Switch 👻</p>
 			)}
+
+			{/* Posts */}
 			{!isLoading && !isRefetching && posts && (
 				<div>
 					{posts.map((post) => (
@@ -70,4 +75,5 @@ const Posts = ({ feedType, username, userId }) => {
 		</>
 	);
 };
+
 export default Posts;

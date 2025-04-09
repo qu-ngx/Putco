@@ -1,14 +1,16 @@
-const Notification = require ("../../models/Notification");
+const Notification = require("../../models/notification");
 
 const getNotifications = async (req, res) => {
 	try {
-		const userId = req.user._id;
+		// Get the userId from request parameters or body
+		const { userId } = req.body; // Assuming userId is passed in the body
 
 		const notifications = await Notification.find({ to: userId }).populate({
 			path: "from",
 			select: "userName profileImg",
 		});
 
+		// Update all notifications to 'read'
 		await Notification.updateMany({ to: userId }, { read: true });
 
 		res.status(200).json(notifications);
@@ -20,7 +22,8 @@ const getNotifications = async (req, res) => {
 
 const deleteNotifications = async (req, res) => {
 	try {
-		const userId = req.user._id;
+		// Get the userId from request parameters or body
+		const { userId } = req.body; // Assuming userId is passed in the body
 
 		await Notification.deleteMany({ to: userId });
 
@@ -30,4 +33,5 @@ const deleteNotifications = async (req, res) => {
 		res.status(500).json({ error: "Internal Server Error" });
 	}
 };
-module.exports = {getNotifications, deleteNotifications};
+
+module.exports = { getNotifications, deleteNotifications };

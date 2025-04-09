@@ -11,6 +11,10 @@ import shopSearchSlice from "./shop/search-slice";
 import shopReviewSlice from "./shop/review-slice";
 import commonFeatureSlice from "./common-slice";
 import locationsReducer from "./shop/locations-slice";
+/*
+import userSlice from "../store/social-media/user-slice"
+import notificationSlice from "../store/social-media/notification-slice"
+import postSlice from "../store/social-media/post-slice"*/
 
 const store = configureStore({
   reducer: {
@@ -28,6 +32,12 @@ const store = configureStore({
 
     commonFeature: commonFeatureSlice,
     locations: locationsReducer,
+/*
+    notification: notificationSlice,
+    user: userSlice,
+    post: postSlice,
+    */
+    
   },
 });
 

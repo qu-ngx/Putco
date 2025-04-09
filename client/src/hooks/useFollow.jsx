@@ -7,7 +7,7 @@ const useFollow = () => {
 	const { mutate: follow, isPending } = useMutation({
 		mutationFn: async (userId) => {
 			try {
-				const res = await fetch(`/api/social-media/user/follow/${userId}`, {
+				const res = await fetch(`http://localhost:5300/api/social-media/user/follow/${userId}`, {
 					method: "POST",
 				});
 

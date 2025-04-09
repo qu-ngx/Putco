@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import useUpdateUserProfile from "../../../hooks/useUserUpdateProfile";
 
-const EditProfileModal = ({ authUser }) => {
+const EditProfileModal = ({ user }) => {
 	const [formData, setFormData] = useState({
 		fullName: "",
 		username: "",
@@ -19,17 +19,17 @@ const EditProfileModal = ({ authUser }) => {
 	};
 
 	useEffect(() => {
-		if (authUser) {
+		if (user) {
 			setFormData({
-				username: authUser.username,
-				email: authUser.email,
-				bio: authUser.bio,
-				link: authUser.link,
+				username: user.username,
+				email: user.email,
+				bio: user.bio,
+				link: user.link,
 				newPassword: "",
 				currentPassword: "",
 			});
 		}
-	}, [authUser]);
+	}, [user]);
 
 	return (
 		<>
@@ -122,4 +122,5 @@ const EditProfileModal = ({ authUser }) => {
 		</>
 	);
 };
+
 export default EditProfileModal;

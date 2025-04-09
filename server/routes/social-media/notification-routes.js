@@ -4,7 +4,7 @@ const { deleteNotifications, getNotifications } = require("../../controllers/soc
 
 const router = express.Router();
 
-router.get("/", protectRoute, getNotifications);
-router.delete("/", protectRoute, deleteNotifications);
+router.get("/", getNotifications);
+router.delete("/", deleteNotifications);
 
 module.exports = router;

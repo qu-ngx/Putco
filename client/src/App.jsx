@@ -22,22 +22,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
-//Social Media
-
-import HomePage from "./pages/social-media-view/home/home-page";
-import NotificationPage from "./pages/social-media-view/notification/notification-page";
-import ProfilePage from "./pages/social-media-view/profile/profile-page";
+import HomePage from "./pages/social-media-view/home/home-page"
+import NotificationPage from "./pages/social-media-view/notification/notification-page";  // Adjust the relative path
+import ProfilePage from "./pages/social-media-view/profile/profile-page";  // Adjust the relative path
 import RightPanel from "./components/social-media-view/right-panel";
-
-import { Toaster } from "react-hot-toast";
-const SocialMediaLayout = ({ children }) => (
-  <div>
-    <div className="social-media-content">{children}</div>
-    <RightPanel />
-    <Toaster />
-  </div>
-); 
 function App() {
+
   const { user, isAuthenticated, isLoading } = useSelector(
     (state) => state.auth
   );
@@ -102,13 +92,18 @@ function App() {
           <Route path="paypal-return" element={<PaypalReturnPage />} />
           <Route path="payment-success" element={<PaymentSuccessPage />} />
           <Route path="search" element={<SearchProducts />} />
-          </Route>
            {/* Social Media Routes */}
-        <Route path="shop/social-media" element={<SocialMediaLayout />}>
-          <Route path="home" element={<HomePage />} />
-          <Route path="notifications" element={<NotificationPage />} />
-          <Route path="profile/:username" element={<ProfilePage />} />
-        </Route>  
+           <Route path="social-media" element={
+          <div className="flex">
+            <HomePage />
+            <RightPanel /> {/* RightPanel appears alongside HomePage */}
+          </div>
+        } />
+
+         <Route path="social-media/notifications" element={  <NotificationPage /> } />
+         <Route path="social-media/profile/:username" element={  <ProfilePage /> } />
+          
+        </Route>
         <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

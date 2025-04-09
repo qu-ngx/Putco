@@ -75,7 +75,6 @@ function ShoppingHome() {
   function handleGetProductDetails(getCurrentProductId) {
     dispatch(fetchProductDetails(getCurrentProductId));
   }
-
   function handleAddtoCart(getCurrentProductId) {
     dispatch(
       addToCart({
@@ -164,7 +163,7 @@ function ShoppingHome() {
             <ChevronRightIcon className="w-4 h-4" />
           </Button>
         </div>
-
+        
         {/* Categories section */}
         <section className="py-12 bg-white">
           <div className="container mx-auto px-4">

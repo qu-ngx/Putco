@@ -4,9 +4,9 @@ const { followUnfollowUser, getSuggestedUsers, getUserProfile, updateUser } = re
 
 const router = express.Router();
 
-router.get("/profile/:userName", protectRoute, getUserProfile);
-router.get("/suggested", protectRoute, getSuggestedUsers);
-router.post("/follow/:id", protectRoute, followUnfollowUser);
-router.post("/update", protectRoute, updateUser);
+router.get("/profile/:userName",  getUserProfile);
+router.get("/suggested",  getSuggestedUsers);
+router.post("/follow/:id", followUnfollowUser);
+router.post("/update", updateUser);
 
 module.exports = router;
