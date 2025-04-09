@@ -21,6 +21,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { API_ENDPOINTS } from "@/config/api";
+import { X } from "lucide-react";
 
 function ShoppingListing() {
   const dispatch = useDispatch();
@@ -31,6 +32,8 @@ function ShoppingListing() {
   const [sort, setSort] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [prevCategory, setPrevCategory] = useState(searchParams.get("category") || "restaurant");
   const { toast } = useToast();
   const [userReviews, setUserReviews] = useState({});
 
@@ -66,16 +69,37 @@ function ShoppingListing() {
     sessionStorage.setItem("filters", JSON.stringify(cpyFilters));
   }
 
-  function handleGetProductDetails(getCurrentProductId) {
-    dispatch(fetchLocationDetails(getCurrentProductId));
-  }
+  const handleGetProductDetails = (getCurrentProductId) => {
+    if (!getCurrentProductId) return;
+    
+    // Close dialog first if open
+    setDialogOpen(false);
+    
+    // Clear previous details
+    dispatch({ type: 'locations/clearLocationDetails' });
+    
+    // Fetch new details
+    dispatch(fetchLocationDetails(getCurrentProductId))
+      .then(() => {
+        setDialogOpen(true);
+      });
+  };
 
   useEffect(() => {
-    if (locationDetails !== null) setOpenDetailsDialog(true);
-  }, [locationDetails]);
+    // Reset state when category changes
+    if (categorySearchParam !== prevCategory) {
+      dispatch({ type: 'locations/clearLocationDetails' });
+      setOpenDetailsDialog(false);
+      setPrevCategory(categorySearchParam);
+    }
+    
+    // Only open dialog if we have valid location details
+    if (locationDetails?.place_id) {
+      setOpenDetailsDialog(true);
+    }
+  }, [locationDetails, categorySearchParam, prevCategory, dispatch]);
 
   useEffect(() => {
-    // Use default coordinates
     dispatch(
       fetchNearbyLocations({
         latitude: DEFAULT_COORDINATES.latitude,
@@ -87,17 +111,18 @@ function ShoppingListing() {
   }, [dispatch, categorySearchParam]);
 
   useEffect(() => {
-    // Fetch user reviews for all locations
     const fetchUserReviews = async () => {
       if (!locationList?.length) return;
       
       const reviews = {};
       for (const location of locationList) {
         try {
+          if (!location.place_id) continue;
           const response = await axios.get(API_ENDPOINTS.shop.reviews.get(location.place_id));
-          reviews[location.place_id] = response.data.data;
+          reviews[location.place_id] = response.data.data || [];
         } catch (error) {
           console.error(`Error fetching reviews for ${location.place_id}:`, error);
+          reviews[location.place_id] = [];
         }
       }
       setUserReviews(reviews);
@@ -109,9 +134,8 @@ function ShoppingListing() {
   const selectedCategory =
     placeTypes.find((type) => type.id === categorySearchParam) || placeTypes[0];
 
-  // Sort locations based on selected sort option
+
   const sortedLocations = [...(locationList || [])].sort((a, b) => {
-    // First, sort by open/closed status if status filter is active
     if (filters.status && filters.status.length > 0) {
       const aIsOpen = a.opening_hours?.open_now;
       const bIsOpen = b.opening_hours?.open_now;
@@ -120,7 +144,6 @@ function ShoppingListing() {
       }
     }
 
-    // Then apply the selected sort option
     if (!sort) return 0;
 
     switch (sort) {
@@ -135,11 +158,13 @@ function ShoppingListing() {
     }
   });
 
-  // Filter locations based on selected filters
   const filteredLocations = sortedLocations.filter((location) => {
+    // exclude Walmart locations
+    const isWalmart = /walmart|supercenter|walh|walm/i.test(location.name.toLowerCase());
+    if (isWalmart) return false;
+  
     if (!filters || Object.keys(filters).length === 0) return true;
-
-    // Status filter
+  
     if (filters.status && filters.status.length > 0) {
       const isOpen = location.opening_hours?.open_now;
       if (!filters.status.includes(isOpen ? "open" : "closed")) {
@@ -147,23 +172,6 @@ function ShoppingListing() {
       }
     }
 
-    // Brand filter
-    if (filters.brand && filters.brand.length > 0) {
-      const locationName = location.name.toLowerCase();
-      if (!filters.brand.some(brand => locationName.includes(brand.toLowerCase()))) {
-        return false;
-      }
-    }
-
-    // Rating filter
-    if (filters.rating && filters.rating.length > 0) {
-      const minRating = Math.min(...filters.rating.map(r => parseFloat(r)));
-      if (!location.rating || location.rating < minRating) {
-        return false;
-      }
-    }
-
-    // Price filter
     if (filters.price && filters.price.length > 0) {
       const priceLevel = location.price_level || 0;
       if (!filters.price.includes(priceLevel.toString())) {
@@ -175,6 +183,10 @@ function ShoppingListing() {
   });
 
   const handleEditReview = (review) => {
+    if (!review?.placeId) {
+      console.error("No placeId in review");
+      return;
+    }
     setOpenDetailsDialog(true);
     dispatch(fetchLocationDetails(review.placeId));
   };
@@ -193,7 +205,6 @@ function ShoppingListing() {
           title: "Review Deleted",
           description: "Your review has been deleted.",
         });
-        // Refresh user reviews
         const updatedReviews = { ...userReviews };
         Object.keys(updatedReviews).forEach(placeId => {
           updatedReviews[placeId] = updatedReviews[placeId].filter(
@@ -212,99 +223,101 @@ function ShoppingListing() {
     }
   };
 
+  const categories = [
+    { id: "restaurant", label: "RESTAURANTS" },
+    { id: "beauty_salon", label: "BEAUTY SALONS" },
+    { id: "home_goods_store", label: "HOME DECORATIONS" },
+    { id: "clothing_store", label: "CLOTHES" }
+  ];
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
-      <ProductFilter filters={filters} handleFilter={handleFilter} />
-      <div className="bg-background w-full rounded-lg shadow-sm">
-        <div className="p-4 border-b">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-extrabold">
-                Nearby {selectedCategory.label}
-              </h2>
-            </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <Store className="h-4 w-4" />
-                  <span>{selectedCategory.label}</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuRadioGroup
-                  value={categorySearchParam}
-                  onValueChange={handleCategoryChange}
-                >
-                  {placeTypes.map((type) => (
-                    <DropdownMenuRadioItem value={type.id} key={type.id}>
-                      {type.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground">
-              {filteredLocations.length} Locations
-            </span>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <ArrowUpDownIcon className="h-4 w-4" />
-                  <span>Sort by</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-[200px]">
-                <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
-                  {sortOptions.map((sortItem) => (
-                    <DropdownMenuRadioItem
-                      value={sortItem.id}
-                      key={sortItem.id}
-                    >
-                      {sortItem.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-          {filteredLocations.length > 0 ? (
-            filteredLocations.map((location) => (
-              <ShoppingProductTile
-                key={location.place_id}
-                product={{
-                  ...location,
-                  userReviews: userReviews[location.place_id] || [],
-                }}
-                handleGetProductDetails={handleGetProductDetails}
-                onEditReview={handleEditReview}
-                onDeleteReview={handleDeleteReview}
-              />
-            ))
-          ) : (
-            <div className="col-span-full text-center py-8 text-muted-foreground">
-              No locations found matching your filters. Try adjusting your filters or
-              search radius.
-            </div>
-          )}
+    <div className="flex flex-col">
+      {/* Header and category buttons remain the same */}
+      <div className="text-center py-6 bg-white">
+        <h1 className="text-9xl font-koulen text-text-orange">PUTCO</h1>
+        <p className="text-2xl font-koulen text-text-orange">ASK PUTCO. ASK PUTNAM</p>
+        <div className="flex justify-evenly mt-6 space-x-4">
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => handleCategoryChange(category.id)}
+              className={`px-4 font-koulen text-3xl border-b-4 ${
+                categorySearchParam === category.id
+                  ? "border-text-orange text-text-orange font-koulen"
+                  : "border-transparent text-text-orange hover:text-black"
+              }`}
+            >
+              {category.label}
+            </button>
+          ))}
         </div>
       </div>
-      <ProductDetailsDialog
-        open={openDetailsDialog}
-        setOpen={setOpenDetailsDialog}
-        productDetails={locationDetails}
-      />
+
+      <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 p-4 md:p-6">
+        <ProductFilter filters={filters} handleFilter={handleFilter} />
+        <div className="bg-background w-full rounded-lg shadow-sm">
+          <div className="p-4 border-b">
+            <div className="flex items-center justify-between">
+              <span className="text-muted-foreground">
+                {filteredLocations.length} Locations
+              </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex items-center gap-1"
+                  >
+                    <ArrowUpDownIcon className="h-4 w-4" />
+                    <span>Sort by</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[200px]">
+                  <DropdownMenuRadioGroup value={sort} onValueChange={handleSort}>
+                    {sortOptions.map((sortItem) => (
+                      <DropdownMenuRadioItem
+                        value={sortItem.id}
+                        key={sortItem.id}
+                      >
+                        {sortItem.label}
+                      </DropdownMenuRadioItem>
+                    ))}
+                  </DropdownMenuRadioGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+            {filteredLocations.length > 0 ? (
+              filteredLocations.map((location) => (
+                <ShoppingProductTile
+                  key={location.place_id}
+                  product={{
+                    ...location,
+                    userReviews: userReviews[location.place_id] || [],
+                  }}
+                  handleGetProductDetails={handleGetProductDetails}
+                  onEditReview={handleEditReview}
+                  onDeleteReview={handleDeleteReview}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                No locations found matching your filters. Try adjusting your filters or
+                search radius.
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {locationDetails && (
+  <ProductDetailsDialog
+    open={dialogOpen}
+    setOpen={setDialogOpen}
+    productDetails={locationDetails}
+  />
+)}
+      </div>
     </div>
   );
 }

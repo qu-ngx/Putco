@@ -4,6 +4,15 @@ const CLIENT_PORT_ALT = import.meta.env.VITE_CLIENT_PORT_ALT || 5174;
 
 export const API_BASE_URL = `http://localhost:${SERVER_PORT}/api`;
 
+export const API_CONFIG = {
+  baseURL: 'http://localhost:5300',
+  endpoints: {
+    health: '/api/health',
+    customLocations: '/api/admin/newLocations',
+    adminCustomLocations: '/api/admin/custom-locations'
+  }
+};
+
 export const API_ENDPOINTS = {
   auth: {
     register: "http://localhost:5300/api/auth/register",
@@ -23,6 +32,11 @@ export const API_ENDPOINTS = {
       get: "http://localhost:5300/api/admin/orders/get",
       details: "http://localhost:5300/api/admin/orders/details",
       update: "http://localhost:5300/api/admin/orders/update",
+    },
+    customLocations: {
+      add: `${API_BASE_URL}/admin/custom-locations/add`,
+      get: `${API_BASE_URL}/admin/custom-locations/get`,
+      delete: (id) => `${API_BASE_URL}/admin/custom-locations/delete/${id}`
     },
   },
   shop: {
@@ -76,4 +90,4 @@ export const API_ENDPOINTS = {
   },
 };
 
-export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; 
+export const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';

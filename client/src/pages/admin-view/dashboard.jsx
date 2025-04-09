@@ -3,13 +3,19 @@ import { Button } from "@/components/ui/button";
 import { addFeatureImage, getFeatureImages } from "@/store/common-slice";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import config from "../../config";
+import { customLocationService } from '../../services/customLocationService';
 
 function AdminDashboard() {
   const [imageFile, setImageFile] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState("");
   const [imageLoadingState, setImageLoadingState] = useState(false);
+  const [apiStatus, setApiStatus] = useState(null);
   const dispatch = useDispatch();
   const { featureImageList } = useSelector((state) => state.commonFeature);
+  const navigate = useNavigate();
 
   console.log(uploadedImageUrl, "uploadedImageUrl");
 
@@ -22,10 +28,6 @@ function AdminDashboard() {
       }
     });
   }
-
-  useEffect(() => {
-    dispatch(getFeatureImages());
-  }, [dispatch]);
 
   console.log(featureImageList, "featureImageList");
 
@@ -47,10 +49,11 @@ function AdminDashboard() {
       <div className="flex flex-col gap-4 mt-5">
         {featureImageList && featureImageList.length > 0
           ? featureImageList.map((featureImgItem) => (
-              <div className="relative">
+              <div className="relative" key={featureImgItem._id || index}>
                 <img
                   src={featureImgItem.image}
                   className="w-full h-[300px] object-cover rounded-t-lg"
+                  alt="Feature image"
                 />
               </div>
             ))

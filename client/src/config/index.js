@@ -59,26 +59,13 @@ export const addProductFormElements = [
     name: "category",
     componentType: "select",
     options: [
-      { id: "men", label: "Men" },
-      { id: "women", label: "Women" },
-      { id: "kids", label: "Kids" },
-      { id: "accessories", label: "Accessories" },
-      { id: "footwear", label: "Footwear" },
+      { id: "restaurant", label: "Restaurants" },
+      { id: "home_goods_store", label: "Decorations" },
+      { id: "beauty_salon", label: "Salons" },
+      { id: "clothing_store", label: "Clothes" },
     ],
   },
-  {
-    label: "Brand",
-    name: "brand",
-    componentType: "select",
-    options: [
-      { id: "nike", label: "Nike" },
-      { id: "adidas", label: "Adidas" },
-      { id: "puma", label: "Puma" },
-      { id: "levi", label: "Levi's" },
-      { id: "zara", label: "Zara" },
-      { id: "h&m", label: "H&M" },
-    ],
-  },
+
   {
     label: "Price",
     name: "price",
@@ -147,16 +134,6 @@ export const filterOptions = {
     { id: "open", label: "Open Now" },
     { id: "closed", label: "Closed" },
   ],
-  brand: [
-    { id: "starbucks", label: "Starbucks" },
-    { id: "mcdonalds", label: "McDonald's" },
-    { id: "subway", label: "Subway" },
-    { id: "dunkin", label: "Dunkin'" },
-    { id: "chipotle", label: "Chipotle" },
-    { id: "panera", label: "Panera Bread" },
-    { id: "wendys", label: "Wendy's" },
-    { id: "burgerking", label: "Burger King" },
-  ],
   rating: [
     { id: "4.5", label: "4.5+ Stars" },
     { id: "4.0", label: "4.0+ Stars" },
@@ -221,23 +198,14 @@ export const DEFAULT_COORDINATES = {
 
 export const placeTypes = [
   { id: "restaurant", label: "Restaurants" },
-  { id: "cafe", label: "Cafes" },
-  { id: "bar", label: "Bars" },
-  { id: "supermarket", label: "Supermarkets" },
-  { id: "shopping_mall", label: "Shopping Malls" },
-  { id: "convenience_store", label: "Convenience Stores" },
-  { id: "bakery", label: "Bakeries" },
-  { id: "clothing_store", label: "Clothing Stores" },
-  { id: "department_store", label: "Department Stores" },
-  { id: "electronics_store", label: "Electronics Stores" },
-  { id: "grocery_or_supermarket", label: "Grocery Stores" },
-  { id: "pharmacy", label: "Pharmacies" },
-  { id: "book_store", label: "Book Stores" },
-  { id: "home_goods_store", label: "Home Goods" },
-  { id: "furniture_store", label: "Furniture Stores" },
-  { id: "hardware_store", label: "Hardware Stores" },
-  { id: "pet_store", label: "Pet Stores" },
-  { id: "shoe_store", label: "Shoe Stores" },
-  { id: "jewelry_store", label: "Jewelry Stores" },
-  { id: "liquor_store", label: "Liquor Stores" }
+  { id: "home_goods_store", label: "Home Decoration" },
+  { id: "clothing_store", label: "Shopping" },
+  { id: "beauty_salon", label: "Salons" },
 ];
+
+
+const config = {
+  apiUrl: `http://localhost:${import.meta.env.VITE_SERVER_PORT || '5300'}/api`
+}
+
+export default config

@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 import {
-  BadgeCheck,
+  MapPinPlus,
+  BadgePercent,
   ChartNoAxesCombined,
   LayoutDashboard,
   ShoppingBasket,
@@ -23,10 +24,16 @@ const adminSidebarMenuItems = [
     icon: <ShoppingBasket />,
   },
   {
-    id: "orders",
-    label: "Orders",
-    path: "/admin/orders",
-    icon: <BadgeCheck />,
+    id: "coupons",
+    label: "Coupons",
+    path: "/admin/coupon",
+    icon: <BadgePercent />,
+  },
+  {
+    id: "newLocations",
+    label: "New Locations",
+    path: "/admin/newLocations",
+    icon: <MapPinPlus />,
   },
 ];
 

@@ -1,57 +1,45 @@
+// Add this at the top of your file to see all registered routes
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-require("dotenv").config();
+const path = require("path");
+const app = require("./app");
+const config = require("./config");
 
-const authRoutes = require("./routes/auth/auth-routes");
-const adminProductsRoutes = require("./routes/admin/products-routes");
-const adminOrderRoutes = require("./routes/admin/order-routes");
-const shopProductsRoutes = require("./routes/shop/products-routes");
-const shopCartRoutes = require("./routes/shop/cart-routes");
-const shopAddressRoutes = require("./routes/shop/address-routes");
-const shopOrderRoutes = require("./routes/shop/order-routes");
-const shopSearchRoutes = require("./routes/shop/search-routes");
-const shopReviewRoutes = require("./routes/shop/review-routes");
-const commonFeatureRoutes = require("./routes/common/feature-routes");
-const locationsRoutes = require("./routes/shop/locations-routes");
-
-const app = express();
-
-// Middleware
-app.use(express.json());
-app.use(cookieParser());
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
-    credentials: true,
-  })
-);
-
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/admin/products", adminProductsRoutes);
-app.use("/api/admin/orders", adminOrderRoutes);
-app.use("/api/shop/products", shopProductsRoutes);
-app.use("/api/shop/cart", shopCartRoutes);
-app.use("/api/shop/address", shopAddressRoutes);
-app.use("/api/shop/order", shopOrderRoutes);
-app.use("/api/shop/products/search", shopSearchRoutes);
-app.use("/api/shop/review", shopReviewRoutes);
-app.use("/api/common/feature", commonFeatureRoutes);
-app.use("/api/shop/locations", locationsRoutes);
-
-// MongoDB connection
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
-    console.log("MongoDB connected");
-  })
-  .catch((error) => {
-    console.error("MongoDB connection error:", error);
-  });
-
+// Start the server
 const PORT = process.env.PORT || 5300;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-}); 
+
+// Connect to MongoDB
+mongoose.connect(config.mongoURI)
+  .then(() => {
+    console.log('Connected to MongoDB');
+    
+    // Print all registered routes for debugging
+    console.log('=== REGISTERED ROUTES ===');
+    function print(path, layer) {
+      if (layer.route) {
+        layer.route.stack.forEach(print.bind(null, path));
+      } else if (layer.name === 'router' && layer.handle.stack) {
+        layer.handle.stack.forEach(print.bind(null, path + layer.regexp.source.replace("^", "").replace("\\/?(?=\\/|$)", "")));
+      } else if (layer.method) {
+        console.log('%s %s', layer.method.toUpperCase(), path);
+      }
+    }
+    
+    app._router.stack.forEach(print.bind(null, ''));
+    console.log('========================');
+    
+    // Make sure your server is properly importing the app and starting on the correct port
+    const app = require('./app');
+    const config = require('./config');
+    
+    const PORT = config.server.port;
+    
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  })
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+  });

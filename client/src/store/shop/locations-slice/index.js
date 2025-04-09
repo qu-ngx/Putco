@@ -64,7 +64,8 @@ const locationsSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null;
-    }
+    },
+    resetLocationsState: () => initialState
   },
   extraReducers: (builder) => {
     builder

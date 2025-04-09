@@ -22,10 +22,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import PaypalReturnPage from "./pages/shopping-view/paypal-return";
 import PaymentSuccessPage from "./pages/shopping-view/payment-success";
 import SearchProducts from "./pages/shopping-view/search";
+
 import HomePage from "./pages/social-media-view/home/home-page"
 import NotificationPage from "./pages/social-media-view/notification/notification-page";  // Adjust the relative path
 import ProfilePage from "./pages/social-media-view/profile/profile-page";  // Adjust the relative path
 import RightPanel from "./components/social-media-view/right-panel";
+import CouponPage from './pages/admin-view/CouponPage';
+import CustomLocationsPage from './pages/admin-view/CustomLocationsPage';
+
 function App() {
 
   const { user, isAuthenticated, isLoading } = useSelector(
@@ -76,6 +80,8 @@ function App() {
           <Route path="products" element={<AdminProducts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="features" element={<AdminFeatures />} />
+          <Route path="newLocations" element={<CustomLocationsPage />} />
+          <Route path="coupon" element={<CouponPage />} /> {/* Move this inside admin route */}
         </Route>
         <Route
           path="/shop"
@@ -106,6 +112,7 @@ function App() {
         </Route>
         <Route path="/unauth-page" element={<UnauthPage />} />
         <Route path="*" element={<NotFound />} />
+        {/* Remove the standalone coupon route */}
       </Routes>
     </div>
   );

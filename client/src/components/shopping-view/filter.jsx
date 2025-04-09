@@ -9,7 +9,6 @@ import { Clock, Star, DollarSign, Store } from "lucide-react";
 function ProductFilter({ filters, handleFilter }) {
   const filterIcons = {
     status: Clock,
-    brand: Store,
     rating: Star,
     price: DollarSign,
   };

@@ -11,14 +11,35 @@ function ShoppingProductTile({
 }) {
   const fallbackImage = "https://via.placeholder.com/300x200?text=No+Image+Available";
   
-  // Get the first photo reference if available
+  
   const photoReference = product?.photos?.[0]?.photo_reference;
   const imageUrl = photoReference
     ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photo_reference=${photoReference}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`
     : fallbackImage;
 
+    const getCardColor = () => {
+      if (!product?.types) return "bg-listyellow";
+      const categoryPriority = [
+        { types: ["department_store", "supermarket"], color: "bg-shopping" },
+        { types: ["clothing_store", "shoe_store"], color: "bg-shopping" },
+        { types: ["pharmacy", "drugstore"], color: "bg-salon" },
+        { types: ["home_goods_store", "furniture_store"], color: "bg-deco" },
+        { types: ["hardware_store"], color: "bg-deco" },
+        { types: ["beauty_salon", "spa"], color: "bg-salon" },
+        { types: ["restaurant", "food"], color: "bg-listyellow" }
+      ];
+    
+      for (const category of categoryPriority) {
+        if (category.types.some(type => product.types.includes(type))) {
+          return category.color;
+        }
+      }
+    
+      return "bg-listyellow";
+    };
+
   return (
-    <Card className="w-full max-w-sm mx-auto">
+    <Card className={`w-full max-w-sm mx-auto ${getCardColor()} !important`}>
       <div onClick={() => handleGetProductDetails(product?.place_id)}>
         <div className="relative">
           {photoReference ? (
@@ -50,10 +71,10 @@ function ShoppingProductTile({
           )}
         </div>
         <CardContent className="p-4">
-          <h2 className="text-xl font-bold mb-2">{product?.name}</h2>
+          <h2 className="text-3xl font-koulen text-center mb-2 text-white">{product?.name}</h2>
           <div className="flex items-center gap-2 mb-2">
             <MapPin className="w-4 h-4" />
-            <span className="text-[16px] text-muted-foreground">
+            <span className="text-[16px] text-black font-koulen">
               {product?.vicinity}
             </span>
           </div>
@@ -67,7 +88,7 @@ function ShoppingProductTile({
       <CardFooter>
         <Button
           onClick={() => handleGetProductDetails(product?.place_id)}
-          className="w-full"
+          className="w-full text-black font-koulen bg-text-light text-xl border-b-4 border- border-navbar hover:bg-navbar hover:text-text-light transition-colors duration-300"  
         >
           View Details
         </Button>
